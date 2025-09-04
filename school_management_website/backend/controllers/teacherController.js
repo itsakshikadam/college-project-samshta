@@ -79,6 +79,50 @@ exports.getStudents = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch students." });
   }
 };
+exports.addStudent = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Get the teacher's unit_id
+    const staff = await pool.query("SELECT unit_id FROM staff WHERE user_id = $1", [userId]);
+    if (!staff.rows.length) return res.status(404).json({ error: "No staff found." });
+    const unitId = staff.rows[0].unit_id;
+    const {
+      full_name,
+      standard,
+      division,
+      roll_number,
+      dob,
+      gender,
+      address,
+      parent_name,
+      parent_phone
+    } = req.body;
+    const result = await pool.query(
+      `INSERT INTO students (unit_id, full_name, standard, division, roll_number, dob, gender, address, parent_name, parent_phone)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [unitId, full_name, standard, division, roll_number, dob, gender, address, parent_name, parent_phone]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add student." });
+  }
+};
+
+exports.updateStudent = async (req, res) => {
+  try {
+    const studentId = req.params.student_id;
+    const { full_name, standard, division, roll_number, dob, gender, address, parent_name, parent_phone } = req.body;
+    // Optionally, verify teacher has permission for this student via unit_id
+    await pool.query(
+      `UPDATE students SET full_name=$1, standard=$2, division=$3, roll_number=$4, dob=$5,
+        gender=$6, address=$7, parent_name=$8, parent_phone=$9 WHERE student_id=$10`,
+      [full_name, standard, division, roll_number, dob, gender, address, parent_name, parent_phone, studentId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Update failed." });
+  }
+};
 
 
 // PUT /api/teacher/:staff_id

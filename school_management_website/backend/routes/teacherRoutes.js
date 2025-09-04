@@ -10,8 +10,13 @@ router.get('/me', authenticateToken, authorizeRoles('teacher'), teacherControlle
 
 // Create teacher staff profile (onboarding)
 router.post('/', authenticateToken, authorizeRoles('teacher'), teacherController.createProfile);
+router.post("/student", authenticateToken, authorizeRoles("teacher"), teacherController.addStudent);
+
 
 // Update teacher staff profile
+
 router.put('/:staff_id', authenticateToken, authorizeRoles('teacher'), teacherController.updateProfile);
+router.put("/student/:student_id", authenticateToken, authorizeRoles("teacher"), teacherController.updateStudent);
+
 
 module.exports = router;
